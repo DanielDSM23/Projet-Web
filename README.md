@@ -34,7 +34,7 @@
 
 - **Framework :** [Next.js 15 (App Router)](https://nextjs.org/)
 - **Stylisation :** [Tailwind CSS](https://tailwindcss.com/) + [Shadcn/UI](https://ui.shadcn.com/)
-- **Base de Données :** [PostgreSQL](https://www.postgresql.org/) (via [Supabase](https://supabase.com/))
+- **Base de Données :** [PostgreSQL](https://www.postgresql.org/)
 - **ORM :** [Prisma](https://prisma.io/)
 - **Animations :** [Framer Motion](https://www.framer.com/motion/)
 - **Icônes :** [Lucide React](https://lucide.dev/)
