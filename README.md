@@ -32,13 +32,13 @@
 
 ## 🛠️ Stack Technique
 
-- **Framework :** [Next.js 15 (App Router)](https://nextjs.org/)
+- **Framework :** [Next.js](https://nextjs.org/)
 - **Stylisation :** [Tailwind CSS](https://tailwindcss.com/) + [Shadcn/UI](https://ui.shadcn.com/)
 - **Base de Données :** [PostgreSQL](https://www.postgresql.org/)
 - **ORM :** [Prisma](https://prisma.io/)
 - **Animations :** [Framer Motion](https://www.framer.com/motion/)
 - **Icônes :** [Lucide React](https://lucide.dev/)
-- **Graphiques :** [Recharts](https://recharts.org/)
+- **Graphiques :** [ChartJs](https://www.chartjs.org/)
 
 ---
 
