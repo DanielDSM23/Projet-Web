@@ -38,4 +38,4 @@ RUN npx prisma generate
 
 # Use CMD (runtime) instead of RUN (buildtime)
 # This allows the container to wait for the DB to be up
-CMD npx prisma migrate dev --name init && npm run dev
+CMD npx prisma migrate && npm run dev
