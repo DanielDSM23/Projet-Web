@@ -24,3 +24,12 @@ jobs:
           context: ./src
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/projet-web:latest
+
+      - name: Trigger Render API Deploy
+        run: |
+          curl --request POST \
+            --url https://api.render.com/deploy/${{ secrets.RENDER_SERVICE_ID }} \
+            --header 'accept: application/json' \
+            --header 'authorization: Bearer ${{ secrets.RENDER_API_KEY }}' \
+            --header 'content-type: application/json' \
+            --data '{"clearCache": "clear"}'
