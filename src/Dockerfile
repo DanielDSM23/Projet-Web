@@ -34,7 +34,7 @@ FROM base as dev
 ENV NODE_ENV=development
 RUN npm install 
 COPY . .
-RUN npx prisma generate
+RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
 
 # Use CMD (runtime) instead of RUN (buildtime)
 # This allows the container to wait for the DB to be up
