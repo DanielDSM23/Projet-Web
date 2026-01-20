@@ -9,7 +9,7 @@ FROM base as builder
 WORKDIR /app
 COPY . .
 # We generate prisma client here so it's available in node_modules
-RUN npx prisma generate
+RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
 RUN npm run build
 
 # --- PRODUCTION STAGE ---
