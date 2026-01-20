@@ -9,13 +9,16 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
 
-  service-a:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  app:
+    build: .
     depends_on:
       db:
         condition: service_healthy
