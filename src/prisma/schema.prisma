@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// --- Enums ---
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum GoalStatus {
+  active
+  completed
+  abandoned
+}
+
+enum Frequency {
+  daily
+  weekly
+}
+
+// --- Models ---
+
+model User {
+  id         String   @id @default(uuid()) // Or use Int @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  name       String?
+  level      Int      @default(1)
+  xp_points  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  goals      Goal[]
+  habits     Habit[]
+  badges     UserBadge[]
+}
+
+model Goal {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  category    String?
+  priority    Priority   @default(medium)
+  status      GoalStatus @default(active)
+  startDate   DateTime?
+  deadline    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps       Step[]
+}
+
+model Step {
+  id          String    @id @default(uuid())
+  title       String
+  deadline    DateTime?
+  isCompleted Boolean   @default(false)
+  order       Int
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  // Relations
+  goalId      String
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id           String     @id @default(uuid())
+  name         String
+  description  String?
+  category     String?
+  frequency    Frequency  @default(daily)
+  weeklyTarget Int?
+  startDate    DateTime   @default(now())
+  isArchived   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs         HabitLog[]
+}
+
+model HabitLog {
+  id          String   @id @default(uuid())
+  date        DateTime
+  isCompleted Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  habitId     String
+  habit       Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date]) // Ensures one log per habit per day
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  icon        String
+  criteria    String
+
+  // Relations
+  users       UserBadge[]
+}
+
+model UserBadge {
+  earnedAt DateTime @default(now())
+
+  // Relations
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId]) // Composite Primary Key
+}
