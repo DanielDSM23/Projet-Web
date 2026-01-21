@@ -24,6 +24,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    command: sh -c "npx prisma migrate deploy && npm run dev"
     ports:
       - "3000:3000"
 volumes:
