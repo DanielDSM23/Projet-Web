@@ -40,4 +40,4 @@ RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
 
 # Use CMD (runtime) instead of RUN (buildtime)
 # This allows the container to wait for the DB to be up
-CMD npx prisma migrate && npm run dev
+CMD npm run dev
