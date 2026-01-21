@@ -29,7 +29,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
 
-CMD prisma migrate deploy && npx prisma generate && npm start
+CMD npm start
 
 # --- DEVELOPMENT STAGE ---
 FROM base as dev
