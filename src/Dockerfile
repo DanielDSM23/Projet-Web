@@ -11,6 +11,7 @@ COPY . .
 RUN npm install
 # We generate prisma client here so it's available in node_modules
 RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
+RUN npx prisma migrate deploy
 RUN npm run build
 
 # --- PRODUCTION STAGE ---
