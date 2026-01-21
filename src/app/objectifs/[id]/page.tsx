@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AddStepForm from "@/components/AddStepForm";
 
 function formatDate(d?: Date | null) {
   if (!d) return "—";
@@ -218,6 +219,7 @@ export default async function ObjectifDetailPage({
                     ))}
                   </ol>
                 )}
+                <AddStepForm goalId={objectif.id} />
               </div>
             </div>
           </section>
