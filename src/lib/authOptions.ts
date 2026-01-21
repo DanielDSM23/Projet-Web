@@ -1,12 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { prisma } from "../../../../lib/prisma";
+import { prisma } from "./prisma";
 
 type dbUser = {
   id: string;
   email: string;
-  passwordHash: string;
+  password: string;
 };
 
 export async function findUserByEmail(email: string): Promise<dbUser | null> {
@@ -17,7 +17,7 @@ export async function findUserByEmail(email: string): Promise<dbUser | null> {
       select: {
         id: true,
         email: true,
-        passwordHash: true,
+        password: true,
       },
     },
   });
@@ -25,7 +25,14 @@ export async function findUserByEmail(email: string): Promise<dbUser | null> {
 }
 
 export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
+  },
+  jwt: {
+    maxAge: 60 * 60 * 24 * 7,
+  },
   providers: [
     Credentials({
       credentials: {
@@ -43,10 +50,7 @@ export const authOptions: NextAuthOptions = {
           const user = await findUserByEmail(email);
           if (!user) return null;
 
-          const isPasswordValid = await bcrypt.compare(
-            password,
-            user.passwordHash,
-          );
+          const isPasswordValid = await bcrypt.compare(password, user.password);
           if (!isPasswordValid) return null;
           return { id: user.id, email: user.email };
         } catch (err) {
