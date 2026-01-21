@@ -29,7 +29,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
 
-CMD ["npm", "start"]
+CMD prisma migrate deploy && npx prisma generate && npm start
 
 # --- DEVELOPMENT STAGE ---
 FROM base as dev
@@ -40,4 +40,4 @@ RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
 
 # Use CMD (runtime) instead of RUN (buildtime)
 # This allows the container to wait for the DB to be up
-CMD npx prisma migrate reset --force && npx prisma generate && npx prisma db seed && npm run dev
+CMD npm run dev
