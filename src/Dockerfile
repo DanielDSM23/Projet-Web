@@ -8,8 +8,10 @@ EXPOSE 3000
 FROM base as builder
 WORKDIR /app
 COPY . .
+RUN npm install
 # We generate prisma client here so it's available in node_modules
-RUN npx prisma generate
+RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
+RUN DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}" npx prisma migrate deploy
 RUN npm run build
 
 # --- PRODUCTION STAGE ---
@@ -34,6 +36,8 @@ FROM base as dev
 ENV NODE_ENV=development
 RUN npm install 
 COPY . .
+RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
+
 # Use CMD (runtime) instead of RUN (buildtime)
 # This allows the container to wait for the DB to be up
 CMD npx prisma migrate reset --force && npx prisma generate && npx prisma db seed && npm run dev
