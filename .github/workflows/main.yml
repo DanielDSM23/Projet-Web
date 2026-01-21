@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/workflow-fix-3
+      - dev
 
 jobs:
   deploy:
