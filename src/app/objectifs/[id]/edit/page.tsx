@@ -1,5 +1,7 @@
+import { GoalStatus, Priority } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
+
 
 function toInputDate(value) {
   if (!value) return "";
@@ -24,8 +26,9 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
     const descriptionRaw = String(formData.get("description") || "").trim();
     const categoryRaw = String(formData.get("category") || "").trim();
 
-    const priority = String(formData.get("priority") || "medium"); // low|medium|high
-    const status = String(formData.get("status") || "active"); // active|completed|abandoned
+    const priority = (formData.get("priority") ?? "medium") as Priority;
+    const status = (formData.get("status") ?? "active") as GoalStatus;
+
 
     const startDateRaw = String(formData.get("startDate") || "").trim();
     const deadlineRaw = String(formData.get("deadline") || "").trim();
@@ -37,7 +40,7 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
 
     const startDate = startDateRaw ? new Date(startDateRaw) : null;
     const deadline = deadlineRaw ? new Date(deadlineRaw) : null;
-
+    
     await prisma.goal.update({
       where: { id: objectif.id },
       data: {

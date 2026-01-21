@@ -6,7 +6,7 @@ import { prisma } from "../../../../lib/prisma";
 type dbUser = {
   id: string;
   email: string;
-  passwordHash: string;
+  password: string;
 };
 
 export async function findUserByEmail(email: string): Promise<dbUser | null> {
@@ -14,11 +14,11 @@ export async function findUserByEmail(email: string): Promise<dbUser | null> {
   const user = await prisma.user.findUnique({
     where: {
       email: cleanedEmail,
-      select: {
-        id: true,
-        email: true,
-        passwordHash: true,
-      },
+    },
+    select: {
+      id: true,
+      email: true,
+      password: true,
     },
   });
   return user || null;
@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
 
           const isPasswordValid = await bcrypt.compare(
             password,
-            user.passwordHash,
+            user.password,
           );
           if (!isPasswordValid) return null;
           return { id: user.id, email: user.email };
