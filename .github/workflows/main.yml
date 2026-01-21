@@ -18,13 +18,14 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          DB_HOST: ${{ secrets.DB_HOST }}
         run: |
           # Use 'sd' to find the placeholder and replace it with the env variable
           # The syntax is: sd 'find' 'replace' file_name
           
           # Replace the DATABASE_URL line
-          sd 'postgres://\$\{DB_USER\}:\$\{DB_PASSWORD\}@db:5432/\$\{DB_NAME\}' \
-             "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}" \
+          sd 'postgres://\$\{DB_USER\}:\$\{DB_PASSWORD\}@\$\{DB_HOST\}:5432/\$\{DB_NAME\}' \
+             "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}" \
              ./src/Dockerfile
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
