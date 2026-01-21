@@ -34,7 +34,6 @@ FROM base as dev
 ENV NODE_ENV=development
 RUN npm install 
 COPY . .
-
 # Use CMD (runtime) instead of RUN (buildtime)
 # This allows the container to wait for the DB to be up
-CMD npx prisma migrate && npx prisma generate && npm run dev
+CMD npx prisma migrate reset --force && npx prisma generate && npx prisma db seed && npm run dev
