@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddStepForm from "@/components/AddStepForm";
+import StepItem from "@/components/StepItem";
 
 function formatDate(d?: Date | null) {
   if (!d) return "—";
@@ -191,31 +192,11 @@ export default async function ObjectifDetailPage({
                 ) : (
                   <ol className="mt-3 space-y-2">
                     {objectif.steps.map((step) => (
-                      <li
+                      <StepItem
                         key={step.id}
-                        className="flex items-start justify-between gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-zinc-900">
-                            <span className="mr-2 text-zinc-400">#{step.order}</span>
-                            {step.title}
-                          </p>
-                          <p className="mt-1 text-xs text-zinc-500">
-                            Deadline : {formatDate(step.deadline)}
-                          </p>
-                        </div>
-
-                        <span
-                          className={[
-                            "shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1",
-                            step.isCompleted
-                              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                              : "bg-zinc-100 text-zinc-700 ring-zinc-200",
-                          ].join(" ")}
-                        >
-                          {step.isCompleted ? "Terminé" : "À faire"}
-                        </span>
-                      </li>
+                        step={step}
+                        goalId={objectif.id}
+                      />
                     ))}
                   </ol>
                 )}
