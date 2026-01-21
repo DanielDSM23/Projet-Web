@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function Objectif() {
   const objectifs = await prisma.goal.findMany({
@@ -80,7 +81,9 @@ export default async function Objectif() {
           <div className="flex items-center gap-3">
             <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
               <p className="text-xs text-zinc-500">Total</p>
-              <p className="text-lg font-semibold text-zinc-900">{list.length}</p>
+              <p className="text-lg font-semibold text-zinc-900">
+                {list.length}
+              </p>
             </div>
             <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
               <p className="text-xs text-zinc-500">Actifs</p>
@@ -95,9 +98,7 @@ export default async function Objectif() {
         <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
           <div className="border-b border-zinc-200 px-6 py-4">
             <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
-            <p className="text-xs text-zinc-500">
-              Les plus récents en premier
-            </p>
+            <p className="text-xs text-zinc-500">Les plus récents en premier</p>
           </div>
 
           <div className="p-6">
@@ -110,7 +111,8 @@ export default async function Objectif() {
                   Pas d&apos;objectifs pour le moment
                 </p>
                 <p className="mt-1 max-w-sm text-sm text-zinc-600">
-                  Crée ton premier objectif pour commencer à suivre ta progression.
+                  Crée ton premier objectif pour commencer à suivre ta
+                  progression.
                 </p>
 
                 {/* Bouton déco (tu peux le remplacer par un Link vers /objectif/new) */}
@@ -191,18 +193,18 @@ export default async function Objectif() {
 
                       {/* Boutons déco (tu pourras brancher des routes ensuite) */}
                       <div className="flex gap-2">
-                        <a
-                          href="#"
+                        <Link
+                          href={`/objectifs/${obj.id}`}
                           className="rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
                         >
                           Voir
-                        </a>
-                        <a
-                          href="#"
+                        </Link>
+                        <Link
+                          href={`/objectifs/${obj.id}/edit`}
                           className="rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
                         >
                           Modifier
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </li>
