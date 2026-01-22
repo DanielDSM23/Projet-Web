@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -24,7 +22,6 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    command: sh -c "npx prisma migrate reset --force && npx prisma migrate dev --name init && npx prisma generate && npx prisma db seed && npm run dev"
     ports:
       - "3000:3000"
-volumes:
-  postgres_data:

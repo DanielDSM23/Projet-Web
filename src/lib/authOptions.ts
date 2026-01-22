@@ -7,6 +7,7 @@ type dbUser = {
   id: string;
   email: string;
   password: string;
+  password: string;
 };
 
 export async function findUserByEmail(email: string): Promise<dbUser | null> {
@@ -15,6 +16,11 @@ export async function findUserByEmail(email: string): Promise<dbUser | null> {
   const user = await prisma.user.findUnique({
     where: {
       email: cleanedEmail,
+    },
+    select: {
+      id: true,
+      email: true,
+      password: true,
     },
     select: {
       id: true,
