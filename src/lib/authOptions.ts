@@ -7,7 +7,6 @@ type dbUser = {
   id: string;
   email: string;
   password: string;
-  password: string;
 };
 
 export async function findUserByEmail(email: string): Promise<dbUser | null> {
@@ -22,14 +21,32 @@ export async function findUserByEmail(email: string): Promise<dbUser | null> {
       email: true,
       password: true,
     },
-    select: {
-      id: true,
-      email: true,
-      password: true,
-    },
   });
 
   return user;
+}
+
+export async function authorizeCredentials(credentials?: {
+  email?: string;
+  password?: string;
+}): Promise<{ id: string; email: string } | null> {
+  const email = credentials?.email;
+  const password = credentials?.password;
+
+  if (!email || !password) return null;
+
+  try {
+    const user = await findUserByEmail(email);
+    if (!user) return null;
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) return null;
+
+    return { id: user.id, email: user.email };
+  } catch (err) {
+    console.error("Auth error:", err);
+    throw new Error("Authentication failed");
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -49,22 +66,7 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        const email = credentials?.email;
-        const password = credentials?.password;
-
-        if (!email || !password) return null;
-
-        try {
-          const user = await findUserByEmail(email);
-          if (!user) return null;
-
-          const isPasswordValid = await bcrypt.compare(password, user.password);
-          if (!isPasswordValid) return null;
-          return { id: user.id, email: user.email };
-        } catch (err) {
-          console.error("Auth error:", err);
-          throw new Error("Authentication failed");
-        }
+        return authorizeCredentials(credentials as any);
       },
     }),
   ],
