@@ -4,7 +4,6 @@ import { redirect, notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
-
 function toInputDate(value) {
   if (!value) return "";
   const d = new Date(value);
@@ -36,7 +35,6 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
     const priority = (formData.get("priority") ?? "medium") as Priority;
     const status = (formData.get("status") ?? "active") as GoalStatus;
 
-
     const startDateRaw = String(formData.get("startDate") || "").trim();
     const deadlineRaw = String(formData.get("deadline") || "").trim();
 
@@ -61,8 +59,11 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
         completedAt: status === "completed" ? new Date() : null,
       },
     });
+    if (status === "completed") {
+      redirect(`/objectifs?status=all&celebrate=${id}`);
+    }
 
-    redirect("/objectifs"); // adapte si ta page liste est ailleurs
+    redirect(`/objectifs`);
   }
 
   return (
