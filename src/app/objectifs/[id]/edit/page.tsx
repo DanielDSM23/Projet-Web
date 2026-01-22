@@ -10,7 +10,7 @@ function toInputDate(value) {
 }
 
 export default async function EditObjectifPage({ params }: { params: { id: string } }) {
-  const userId = "ad87741c-028e-4bf6-b480-fed5d3c1933b"; // TODO: remplacer par l'user connecté
+  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4"; // TODO: remplacer par l'user connecté
   const { id } = await params;
 
   const objectif = await prisma.goal.findFirst({
