@@ -1,5 +1,6 @@
 'use client'
 
+import { toggleHabit } from "@/actions/toggle-habit"
 import Link from "next/link"
 
 type HabitCardProps = {
@@ -26,14 +27,6 @@ export default function HabitCard({
           : "border-zinc-200 bg-white"
       }`}
     >
-      {/* ✏️ Edit button */}
-      <Link
-        href={`/habits/${id}/edit`}
-        className="absolute right-3 top-3 z-10 rounded-lg border bg-white p-2 text-zinc-400 opacity-0 shadow-sm transition-all hover:text-zinc-700 hover:shadow group-hover:opacity-100"
-        aria-label="Modifier l’habitude"
-      >
-        ✏️
-      </Link>
 
       <div className="p-5 flex items-start justify-between gap-4">
         {/* Partie Gauche */}
@@ -69,32 +62,46 @@ export default function HabitCard({
           </p>
         </div>
 
-        {/* Bouton validation */}
-        <button
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
-            isCompletedToday
-              ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
-              : "border-zinc-200 bg-white text-zinc-300 hover:border-zinc-300 hover:bg-zinc-50"
-          }`}
-        >
-          {isCompletedToday ? (
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={3}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          ) : (
-            <span className="h-4 w-4 rounded-full bg-zinc-100"></span>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+
+          {/* ✏️ Bouton Éditer */}
+          <Link
+            href={`/habits/${id}/edit`}
+            className="rounded-lg p-2 text-zinc-400 opacity-0 transition-all hover:bg-zinc-100 hover:text-zinc-700 group-hover:opacity-100"
+            aria-label="Modifier l’habitude"
+          >
+            ✏️
+          </Link>
+
+          {/* Bouton Validation */}
+          <button onClick={async () => {
+             await toggleHabit(id)
+          }}
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
+              isCompletedToday
+                ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
+                : "border-zinc-200 bg-white text-zinc-300 hover:border-zinc-300 hover:bg-zinc-50"
+            }`}
+          >
+            {isCompletedToday ? (
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <span className="h-4 w-4 rounded-full bg-zinc-100"></span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Barre décorative */}
