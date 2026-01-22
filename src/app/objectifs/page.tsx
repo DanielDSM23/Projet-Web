@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -8,18 +10,21 @@ export default async function Objectif({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const params = await searchParams; // ✅ IMPORTANT (Next: searchParams est une Promise chez toi)
+  const params = await searchParams;
+  const session = await getServerSession(authOptions);
+
+  const UserData = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
 
   // ✅ Filtres/tri via URL (ex: /objectifs?status=active&priority=high&sort=createdAt_desc)
   const status = typeof params.status === "string" ? params.status : "all"; // all | active | completed | abandoned
   const priority = typeof params.priority === "string" ? params.priority : "all"; // all | low | medium | high
   const sort = typeof params.sort === "string" ? params.sort : "createdAt_desc"; // createdAt_desc | createdAt_asc | title_asc
 
-  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4";
-
   // ✅ where dynamique
   const where = {
-    userId,
+    userId: UserData.id,
     ...(status !== "all" ? { status } : {}),
     ...(priority !== "all" ? { priority } : {}),
   };
@@ -157,10 +162,18 @@ export default async function Objectif({
 
         {/* Content */}
         <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
-            <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
-            <p className="text-xs text-zinc-500">Les plus récents en premier</p>
+          <div className="border-b border-zinc-200 px-6 py-4 flex flex-row items-center justify-between">
+            <div>
+              <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
+              <p className="text-xs text-zinc-500">Les plus récents en premier</p>
+            </div>
+            <div>
+              <Link href="/objectifs/create" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+                + Ajouter un objectif
+              </Link>
+            </div>
           </div>
+
 
           <div className="p-6">
             {list.length === 0 ? (
@@ -177,12 +190,9 @@ export default async function Objectif({
                 </p>
 
                 <div className="mt-5">
-                  <a
-                    href="#"
-                    className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300"
-                  >
+                  <Link href="/objectifs/create" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300">
                     + Ajouter un objectif
-                  </a>
+                  </Link>
                 </div>
               </div>
             ) : (
