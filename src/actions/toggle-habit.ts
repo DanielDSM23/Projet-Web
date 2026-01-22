@@ -32,7 +32,18 @@ export async function toggleHabit(habitId: string) {
         }
       })
 
+    } else {
+      await prisma.habitLog.create({
+        data: {
+          habitId: habitId,
+          date: now,
+          isCompleted: true
+        }
+      })
     }
+
+    // 3. Rafraîchir l'interface
+    revalidatePath("/habits")
 
   } catch (error) {
     console.error("Erreur lors du toggle de l'habitude:", error)
