@@ -1,5 +1,7 @@
 'use client'
 
+import { toggleHabit } from "@/actions/toggle-habit"
+
 type HabitCardProps = {
   id: string
   name: string
@@ -46,7 +48,9 @@ export default function HabitCard({ id, name, category, streak, isCompletedToday
         </div>
 
         {/* Partie Droite : Le Bouton d'action */}
-        <button 
+        <button onClick={async () => {
+             await toggleHabit(id)
+          }}
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
             isCompletedToday
               ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
