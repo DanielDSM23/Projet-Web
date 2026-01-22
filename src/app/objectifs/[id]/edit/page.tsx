@@ -1,6 +1,8 @@
 import { GoalStatus, Priority } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 function toInputDate(value) {
   if (!value) return "";
@@ -8,12 +10,13 @@ function toInputDate(value) {
   return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
 }
 
-export default async function EditObjectifPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const userId = "9e78cf04-2ebd-4fa6-9c8c-b3cace30b2c8"; // TODO: remplacer par l'user connecté
+export default async function EditObjectifPage({ params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+
+  const UserData = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  const userId = UserData.id;
   const { id } = await params;
 
   const objectif = await prisma.goal.findFirst({

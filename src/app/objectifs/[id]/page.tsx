@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AddStepForm from "@/components/AddStepForm";
 import StepItem from "@/components/StepItem";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 function formatDate(d?: Date | null) {
   if (!d) return "—";
@@ -66,7 +68,12 @@ export default async function ObjectifDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4"; // TODO: user connecté
+  const session = await getServerSession(authOptions);
+
+  const UserData = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  const userId = UserData.id;
   const { id } = await params;
 
   const objectif = await prisma.goal.findFirst({
