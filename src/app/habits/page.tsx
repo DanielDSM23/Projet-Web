@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import HabitCard from "@/components/HabitCard"
 import Link from "next/link"
+import { calculateStreak } from "@/lib/streak"
 
 const CURRENT_USER_ID = "ad87741c-028e-4bf6-b480-fed5d3c1933b"
 
@@ -22,9 +23,11 @@ export default async function HabitsPage() {
       log.date.toISOString().split('T')[0] === today
     )
 
+    const currentStreak = calculateStreak(habit);
+
     return {
       ...habit,
-      currentStreak: 0,
+      currentStreak: currentStreak,
       isCompletedToday: hasLogToday
     }
   })
