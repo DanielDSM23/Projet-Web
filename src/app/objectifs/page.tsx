@@ -1,5 +1,8 @@
+import Celebrate from "@/components/Celebrate";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -8,18 +11,22 @@ export default async function Objectif({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const params = await searchParams; // ✅ IMPORTANT (Next: searchParams est une Promise chez toi)
+  const params = await searchParams;
+  const session = await getServerSession(authOptions);
+
+  const UserData = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
 
   // ✅ Filtres/tri via URL (ex: /objectifs?status=active&priority=high&sort=createdAt_desc)
   const status = typeof params.status === "string" ? params.status : "all"; // all | active | completed | abandoned
-  const priority = typeof params.priority === "string" ? params.priority : "all"; // all | low | medium | high
+  const priority =
+    typeof params.priority === "string" ? params.priority : "all"; // all | low | medium | high
   const sort = typeof params.sort === "string" ? params.sort : "createdAt_desc"; // createdAt_desc | createdAt_asc | title_asc
-
-  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4";
 
   // ✅ where dynamique
   const where = {
-    userId,
+    userId: UserData.id,
     ...(status !== "all" ? { status } : {}),
     ...(priority !== "all" ? { priority } : {}),
   };
@@ -91,8 +98,20 @@ export default async function Objectif({
     }
   };
 
+  const cardStatusClasses = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "border-emerald-200 bg-emerald-50/40";
+      case "abandoned":
+        return "border-zinc-200 bg-zinc-50";
+      default:
+        return "border-zinc-200 bg-white";
+    }
+  };
+
   return (
     <main className="min-h-screen bg-zinc-50">
+      <Celebrate />
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         {/* Header */}
         <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -125,25 +144,69 @@ export default async function Objectif({
         {/* ✅ AJOUT: barre de filtres/tri (n'altère pas ton design existant) */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <span className="text-xs text-zinc-500 mr-1">Filtrer :</span>
-          <FilterPill label="Tous" href={buildHref(params, { status: "all" })} active={status === "all"} />
-          <FilterPill label="Actifs" href={buildHref(params, { status: "active" })} active={status === "active"} />
-          <FilterPill label="Terminés" href={buildHref(params, { status: "completed" })} active={status === "completed"} />
-          <FilterPill label="Abandonnés" href={buildHref(params, { status: "abandoned" })} active={status === "abandoned"} />
+          <FilterPill
+            label="Tous"
+            href={buildHref(params, { status: "all" })}
+            active={status === "all"}
+          />
+          <FilterPill
+            label="Actifs"
+            href={buildHref(params, { status: "active" })}
+            active={status === "active"}
+          />
+          <FilterPill
+            label="Terminés"
+            href={buildHref(params, { status: "completed" })}
+            active={status === "completed"}
+          />
+          <FilterPill
+            label="Abandonnés"
+            href={buildHref(params, { status: "abandoned" })}
+            active={status === "abandoned"}
+          />
 
           <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
 
           <span className="text-xs text-zinc-500 mr-1">Priorité :</span>
-          <FilterPill label="Toutes" href={buildHref(params, { priority: "all" })} active={priority === "all"} />
-          <FilterPill label="Haute" href={buildHref(params, { priority: "high" })} active={priority === "high"} />
-          <FilterPill label="Moyenne" href={buildHref(params, { priority: "medium" })} active={priority === "medium"} />
-          <FilterPill label="Faible" href={buildHref(params, { priority: "low" })} active={priority === "low"} />
+          <FilterPill
+            label="Toutes"
+            href={buildHref(params, { priority: "all" })}
+            active={priority === "all"}
+          />
+          <FilterPill
+            label="Haute"
+            href={buildHref(params, { priority: "high" })}
+            active={priority === "high"}
+          />
+          <FilterPill
+            label="Moyenne"
+            href={buildHref(params, { priority: "medium" })}
+            active={priority === "medium"}
+          />
+          <FilterPill
+            label="Faible"
+            href={buildHref(params, { priority: "low" })}
+            active={priority === "low"}
+          />
 
           <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
 
           <span className="text-xs text-zinc-500 mr-1">Trier :</span>
-          <FilterPill label="Récents" href={buildHref(params, { sort: "createdAt_desc" })} active={sort === "createdAt_desc"} />
-          <FilterPill label="Anciens" href={buildHref(params, { sort: "createdAt_asc" })} active={sort === "createdAt_asc"} />
-          <FilterPill label="Titre A→Z" href={buildHref(params, { sort: "title_asc" })} active={sort === "title_asc"} />
+          <FilterPill
+            label="Récents"
+            href={buildHref(params, { sort: "createdAt_desc" })}
+            active={sort === "createdAt_desc"}
+          />
+          <FilterPill
+            label="Anciens"
+            href={buildHref(params, { sort: "createdAt_asc" })}
+            active={sort === "createdAt_asc"}
+          />
+          <FilterPill
+            label="Titre A→Z"
+            href={buildHref(params, { sort: "title_asc" })}
+            active={sort === "title_asc"}
+          />
 
           {/* Reset */}
           <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
@@ -157,10 +220,18 @@ export default async function Objectif({
 
         {/* Content */}
         <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-6 py-4">
-            <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
-            <p className="text-xs text-zinc-500">Les plus récents en premier</p>
+          <div className="border-b border-zinc-200 px-6 py-4 flex flex-row items-center justify-between">
+            <div>
+              <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
+              <p className="text-xs text-zinc-500">Les plus récents en premier</p>
+            </div>
+            <div>
+              <Link href="/objectifs/create" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+                + Ajouter un objectif
+              </Link>
+            </div>
           </div>
+
 
           <div className="p-6">
             {list.length === 0 ? (
@@ -177,12 +248,9 @@ export default async function Objectif({
                 </p>
 
                 <div className="mt-5">
-                  <a
-                    href="#"
-                    className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300"
-                  >
+                  <Link href="/objectifs/create" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300">
                     + Ajouter un objectif
-                  </a>
+                  </Link>
                 </div>
               </div>
             ) : (
@@ -190,7 +258,11 @@ export default async function Objectif({
                 {list.map((obj) => (
                   <li
                     key={obj.id}
-                    className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    data-goal-id={obj.id}
+                    className={[
+                      "group rounded-2xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
+                      cardStatusClasses(obj.status),
+                    ].join(" ")}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -304,7 +376,7 @@ function FilterPill({
 /** buildHref safe (supporte string / string[] et évite l’erreur Symbol) */
 function buildHref(
   currentParams: SearchParams,
-  overrides: Record<string, string | null | undefined>
+  overrides: Record<string, string | null | undefined>,
 ) {
   const sp = new URLSearchParams();
 

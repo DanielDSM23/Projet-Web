@@ -1,7 +1,8 @@
 import { GoalStatus, Priority } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
-
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 function toInputDate(value) {
   if (!value) return "";
@@ -10,7 +11,12 @@ function toInputDate(value) {
 }
 
 export default async function EditObjectifPage({ params }: { params: { id: string } }) {
-  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4"; // TODO: remplacer par l'user connecté
+  const session = await getServerSession(authOptions);
+
+  const UserData = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  const userId = UserData.id;
   const { id } = await params;
 
   const objectif = await prisma.goal.findFirst({
@@ -29,7 +35,6 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
     const priority = (formData.get("priority") ?? "medium") as Priority;
     const status = (formData.get("status") ?? "active") as GoalStatus;
 
-
     const startDateRaw = String(formData.get("startDate") || "").trim();
     const deadlineRaw = String(formData.get("deadline") || "").trim();
 
@@ -40,7 +45,7 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
 
     const startDate = startDateRaw ? new Date(startDateRaw) : null;
     const deadline = deadlineRaw ? new Date(deadlineRaw) : null;
-    
+
     await prisma.goal.update({
       where: { id: objectif.id },
       data: {
@@ -54,8 +59,11 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
         completedAt: status === "completed" ? new Date() : null,
       },
     });
+    if (status === "completed") {
+      redirect(`/objectifs?status=all&celebrate=${id}`);
+    }
 
-    redirect("/objectifs"); // adapte si ta page liste est ailleurs
+    redirect(`/objectifs`);
   }
 
   return (
