@@ -65,6 +65,69 @@ export async function main() {
 
   await prisma.goal.create({
     data: {
+      title: "Améliorer mon alimentation",
+      description: "Préparer des repas simples et réguliers pour la semaine.",
+      category: "Santé",
+      priority: "high",
+      status: "active",
+      startDate: daysAgo(14),
+      deadline: daysFromNow(30),
+      userId: alice.id,
+      steps: {
+        create: [
+          { title: "Aller à la salle 3x/semaine", order: 1, deadline: daysFromNow(7) },
+          { title: "12-5-30 2x/semaine", order: 2, deadline: daysFromNow(14) },
+          { title: "Suivre les macros 5j/7", order: 3, deadline: daysFromNow(21) },
+        ],
+      },
+    },
+  });
+
+  await prisma.goal.create({
+    data: {
+      title: "Passer le projet NestJS en auth complète (JWT + roles)",
+      description: "Sécuriser l’API, gérer les rôles et protéger les endpoints.",
+      category: "Dev",
+      priority: "high",
+      status: "active",
+      startDate: daysAgo(14),
+      deadline: daysFromNow(30),
+      userId: alice.id,
+      steps: {
+        create: [
+          { title: "Créer module Auth + stratégie JWT", deadline: daysFromNow(2), order: 1 },
+          { title: "Créer guard JWT + décorateur user", deadline: daysFromNow(4), order: 2 },
+          { title: "Ajouter roles (admin/partenaire/user)", deadline: daysFromNow(6), order: 3 },
+          { title: "Protéger 5 endpoints sensibles", deadline: daysFromNow(10), order: 4 },
+          { title: "Tester avec Postman + cas d’erreur", deadline: daysFromNow(12), order: 5 },
+        ],
+      },
+    },
+  });
+
+  await prisma.goal.create({
+    data: {
+      title: "Améliorer le sommeil (routine du soir)",
+      description: "Stabiliser l’heure de coucher et réduire les écrans.",
+      category: "Santé",
+      priority: "low",
+      status: "active",
+      startDate: daysAgo(14),
+      deadline: daysFromNow(30),
+      userId: alice.id,
+      steps: {
+        create: [
+          { title: "Définir une heure de coucher cible", deadline: daysFromNow(1), order: 1 },
+          { title: "Couper les écrans 30 min avant", deadline: daysFromNow(4), order: 2 },
+          { title: "Tenir 5 jours consécutifs", deadline: daysFromNow(7), order: 3 },
+          { title: "Ajuster routine (lecture / douche / étirements)", deadline: daysFromNow(10), order: 4 },
+        ],
+      },
+    },
+  });
+
+  await prisma.goal.create({
+    data: {
       title: "Finir un projet Next.js",
       description: "Mettre en prod une app",
       category: "Dev",

@@ -62,10 +62,10 @@ function priorityClasses(priority: string) {
 export default async function ObjectifDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const userId = "ad87741c-028e-4bf6-b480-fed5d3c1933b"; // TODO: user connecté
-  const { id } = params;
+  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4"; // TODO: user connecté
+  const { id } = await params;
 
   const objectif = await prisma.goal.findFirst({
     where: { id, userId },
