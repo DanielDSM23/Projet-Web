@@ -73,4 +73,31 @@ describe("calculateStreak (Logique de Série)", () => {
     ]);
     expect(calculateStreak(habit)).toBe(3);
   });
+
+  it("calcule une série continue s'arrêtant hier (Hier + Avant-Hier)", () => {
+    const habit = createMockHabit([
+      "2025-01-14T08:00:00Z", // Hier (Série active)
+      "2025-01-13T08:00:00Z", // Avant-hier
+    ]);
+    expect(calculateStreak(habit)).toBe(2);
+  });
+
+  it("gère les trous dans la série (Log récent mais trou avant)", () => {
+    const habit = createMockHabit([
+      "2025-01-15T08:00:00Z", // Aujourd'hui
+      "2025-01-14T08:00:00Z", // Hier
+      // PAS de log le 13
+      "2025-01-12T08:00:00Z", // Le 12 (trop vieux, ne compte pas dans la série actuelle)
+    ]);
+    // La série devrait être de 2 (15 et 14)
+    expect(calculateStreak(habit)).toBe(2);
+  });
+
+  it("ne compte pas les doublons le même jour", () => {
+    const habit = createMockHabit([
+      "2025-01-15T08:00:00Z", // Fait à 8h
+      "2025-01-15T20:00:00Z", // Fait à 20h (Doublon)
+    ]);
+    expect(calculateStreak(habit)).toBe(1);
+  });
 });
