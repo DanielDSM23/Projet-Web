@@ -53,4 +53,24 @@ describe("calculateStreak (Logique de Série)", () => {
     expect(calculateStreak(habit)).toBe(1);
   });
 
+  it("retourne 1 si fait hier (14 Janvier) mais pas aujourd'hui", () => {
+    // La série est toujours active car on a le droit de sauter la journée en cours
+    const habit = createMockHabit(["2025-01-14T10:00:00Z"]);
+    expect(calculateStreak(habit)).toBe(1);
+  });
+
+  it("retourne 0 si fait avant-hier (13 Janvier) mais pas hier ni aujourd'hui", () => {
+    // La chaîne est brisée
+    const habit = createMockHabit(["2025-01-13T10:00:00Z"]);
+    expect(calculateStreak(habit)).toBe(0);
+  });
+
+  it("calcule une série continue (Aujourd'hui + Hier + Avant-Hier)", () => {
+    const habit = createMockHabit([
+      "2025-01-15T08:00:00Z", // Aujourd'hui
+      "2025-01-14T08:00:00Z", // Hier
+      "2025-01-13T08:00:00Z", // Avant-hier
+    ]);
+    expect(calculateStreak(habit)).toBe(3);
+  });
 });
