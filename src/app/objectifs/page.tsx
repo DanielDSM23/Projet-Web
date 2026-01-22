@@ -1,17 +1,45 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
-export default async function Objectif() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function Objectif({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams; // ✅ IMPORTANT (Next: searchParams est une Promise chez toi)
+
+  // ✅ Filtres/tri via URL (ex: /objectifs?status=active&priority=high&sort=createdAt_desc)
+  const status = typeof params.status === "string" ? params.status : "all"; // all | active | completed | abandoned
+  const priority = typeof params.priority === "string" ? params.priority : "all"; // all | low | medium | high
+  const sort = typeof params.sort === "string" ? params.sort : "createdAt_desc"; // createdAt_desc | createdAt_asc | title_asc
+
+  const userId = "6a590cfe-bad6-43c5-9c63-9fd9c5e6a6c4";
+
+  // ✅ where dynamique
+  const where = {
+    userId,
+    ...(status !== "all" ? { status } : {}),
+    ...(priority !== "all" ? { priority } : {}),
+  };
+
+  // ✅ orderBy dynamique
+  const orderBy =
+    sort === "createdAt_asc"
+      ? { createdAt: "asc" as const }
+      : sort === "title_asc"
+        ? { title: "asc" as const }
+        : { createdAt: "desc" as const };
+
   const objectifs = await prisma.goal.findMany({
-    where: {
-      userId: "ad87741c-028e-4bf6-b480-fed5d3c1933b",
-    },
-    orderBy: { createdAt: "desc" },
+    where,
+    orderBy,
   });
 
   const list = objectifs ?? [];
 
-  const statusLabel = (status) => {
+  const statusLabel = (status: string) => {
     switch (status) {
       case "active":
         return "Actif";
@@ -24,7 +52,7 @@ export default async function Objectif() {
     }
   };
 
-  const statusClasses = (status) => {
+  const statusClasses = (status: string) => {
     switch (status) {
       case "active":
         return "bg-blue-50 text-blue-700 ring-blue-200";
@@ -37,7 +65,7 @@ export default async function Objectif() {
     }
   };
 
-  const priorityLabel = (priority) => {
+  const priorityLabel = (priority: string) => {
     switch (priority) {
       case "low":
         return "Faible";
@@ -50,7 +78,7 @@ export default async function Objectif() {
     }
   };
 
-  const priorityClasses = (priority) => {
+  const priorityClasses = (priority: string) => {
     switch (priority) {
       case "low":
         return "bg-slate-50 text-slate-700 ring-slate-200";
@@ -94,6 +122,39 @@ export default async function Objectif() {
           </div>
         </header>
 
+        {/* ✅ AJOUT: barre de filtres/tri (n'altère pas ton design existant) */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-500 mr-1">Filtrer :</span>
+          <FilterPill label="Tous" href={buildHref(params, { status: "all" })} active={status === "all"} />
+          <FilterPill label="Actifs" href={buildHref(params, { status: "active" })} active={status === "active"} />
+          <FilterPill label="Terminés" href={buildHref(params, { status: "completed" })} active={status === "completed"} />
+          <FilterPill label="Abandonnés" href={buildHref(params, { status: "abandoned" })} active={status === "abandoned"} />
+
+          <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
+
+          <span className="text-xs text-zinc-500 mr-1">Priorité :</span>
+          <FilterPill label="Toutes" href={buildHref(params, { priority: "all" })} active={priority === "all"} />
+          <FilterPill label="Haute" href={buildHref(params, { priority: "high" })} active={priority === "high"} />
+          <FilterPill label="Moyenne" href={buildHref(params, { priority: "medium" })} active={priority === "medium"} />
+          <FilterPill label="Faible" href={buildHref(params, { priority: "low" })} active={priority === "low"} />
+
+          <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
+
+          <span className="text-xs text-zinc-500 mr-1">Trier :</span>
+          <FilterPill label="Récents" href={buildHref(params, { sort: "createdAt_desc" })} active={sort === "createdAt_desc"} />
+          <FilterPill label="Anciens" href={buildHref(params, { sort: "createdAt_asc" })} active={sort === "createdAt_asc"} />
+          <FilterPill label="Titre A→Z" href={buildHref(params, { sort: "title_asc" })} active={sort === "title_asc"} />
+
+          {/* Reset */}
+          <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
+          <Link
+            href="/objectifs"
+            className="text-xs font-medium text-zinc-600 hover:text-zinc-900"
+          >
+            Réinitialiser
+          </Link>
+        </div>
+
         {/* Content */}
         <section className="rounded-2xl border border-zinc-200 bg-white shadow-sm">
           <div className="border-b border-zinc-200 px-6 py-4">
@@ -115,7 +176,6 @@ export default async function Objectif() {
                   progression.
                 </p>
 
-                {/* Bouton déco (tu peux le remplacer par un Link vers /objectif/new) */}
                 <div className="mt-5">
                   <a
                     href="#"
@@ -191,7 +251,6 @@ export default async function Objectif() {
                         {new Date(obj.createdAt).toLocaleDateString("fr-FR")}
                       </span>
 
-                      {/* Boutons déco (tu pourras brancher des routes ensuite) */}
                       <div className="flex gap-2">
                         <Link
                           href={`/objectifs/${obj.id}`}
@@ -216,4 +275,50 @@ export default async function Objectif() {
       </div>
     </main>
   );
+}
+
+function FilterPill({
+  label,
+  href,
+  active,
+}: {
+  label: string;
+  href: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={[
+        "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+        active
+          ? "border-zinc-900 bg-zinc-900 text-white"
+          : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+      ].join(" ")}
+    >
+      {label}
+    </Link>
+  );
+}
+
+/** buildHref safe (supporte string / string[] et évite l’erreur Symbol) */
+function buildHref(
+  currentParams: SearchParams,
+  overrides: Record<string, string | null | undefined>
+) {
+  const sp = new URLSearchParams();
+
+  for (const [k, v] of Object.entries(currentParams || {})) {
+    if (v == null) continue;
+    if (Array.isArray(v)) v.forEach((vv) => sp.append(k, vv));
+    else sp.set(k, v);
+  }
+
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v == null || v === "") sp.delete(k);
+    else sp.set(k, v);
+  }
+
+  const qs = sp.toString();
+  return qs ? `/objectifs?${qs}` : "/objectifs";
 }
