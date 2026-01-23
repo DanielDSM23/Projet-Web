@@ -7,13 +7,11 @@ EXPOSE 3000
 # --- BUILDER STAGE ---
 FROM base as production
 WORKDIR /app
-RUN apt-get update -y && apt-get install -y openssl
 COPY . .
 RUN npm install
 # We generate prisma client here so it's available in node_modules
 RUN DATABASE_URL="postgres://localhost:5432/dummy" npx prisma generate
-EXPOSE 3000
-CMD npx prisma migrate deploy && npm run dev
+CMD npx prisma migrate deploy && npx next dev -p 3000 -H 0.0.0.0
 
 # --- PRODUCTION STAGE ---
 # FROM base as production
