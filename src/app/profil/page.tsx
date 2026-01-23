@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
+import UserLevel from "@/components/UserLevel";
 
 export default async function ProfilPage() {
   const session = await getServerSession(authOptions);
@@ -63,6 +64,10 @@ export default async function ProfilPage() {
               <p className="mt-1 text-sm text-zinc-600 truncate">
                 {user.email}
               </p>
+            </div>
+
+            <div>
+              <UserLevel level={user.level} currentXp={user.xp_points} />
             </div>
 
             <div className="flex gap-2">
