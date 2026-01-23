@@ -3,6 +3,7 @@ import ProfilForm from "@/components/ProfilForm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
+import LogoutButton from "@/components/LogoutButton";
 
 export default async function ProfilPage() {
   const session = await getServerSession(authOptions);
@@ -39,13 +40,17 @@ export default async function ProfilPage() {
   return (
     <main className="min-h-screen bg-zinc-50">
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
-            Profil
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Récap de ton compte
-          </p>
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
+              Profil
+            </h1>
+            <p className="mt-1 text-sm text-zinc-600">
+              Récap de ton compte + modification du nom.
+            </p>
+          </div>
+
+          <LogoutButton />
         </header>
 
         {/* Recap */}
@@ -100,9 +105,7 @@ export default async function ProfilPage() {
         {/* Form modif */}
         <section className="mt-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h2 className="text-sm font-medium text-zinc-900">Modifier</h2>
-          <p className="mt-1 text-xs text-zinc-500">
-            Modification du profil.
-          </p>
+          <p className="mt-1 text-xs text-zinc-500">Modification du profil.</p>
 
           <div className="mt-5">
             <ProfilForm
