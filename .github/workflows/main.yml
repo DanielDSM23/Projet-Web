@@ -27,6 +27,7 @@ jobs:
         run: cd src && npm run test
   deploy:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
