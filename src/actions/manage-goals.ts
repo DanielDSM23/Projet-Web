@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { GoalStatus, Priority } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
+import { XP_PER_GOAL, calculateNewStats } from "@/lib/gamification";
 
 async function getAuthenticatedUser() {
   const session = await getServerSession(authOptions);
@@ -15,7 +16,7 @@ async function getAuthenticatedUser() {
   
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true },
+    select: { id: true, level: true, xp_points: true },
   });
 
   if (!user) {
@@ -81,6 +82,39 @@ export async function updateGoalAction(goalId: string, formData: FormData) {
 
   const startDate = startDateRaw ? new Date(startDateRaw) : null;
   const deadline = deadlineRaw ? new Date(deadlineRaw) : null;
+
+  // Récupérer l'état actuel
+
+  const oldGoal = await prisma.goal.findUnique({
+    where: { id: goalId },
+    select: { status: true }
+  });
+
+  if (!oldGoal) return;
+
+
+  const isCompleting = status === "completed" && oldGoal.status !== "completed";
+  const isUnCompleting = status !== "completed" && oldGoal.status === "completed";
+
+  if (isCompleting) {
+    // CAS A : On donne l'XP
+    const { newLevel, newXp } = calculateNewStats(user.level, user.xp_points, XP_PER_GOAL);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { level: newLevel, xp_points: newXp }
+    });
+  } 
+  else if (isUnCompleting) {
+    // CAS B : Retour en arrière, On retire l'XP
+    const stats = calculateNewStats(user.level, user.xp_points, -XP_PER_GOAL);
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { level: stats.newLevel, xp_points: stats.newXp }
+      // Note: On ne baisse pas le niveau pour ne pas frustrer, juste l'XP
+    });
+  }
 
   await prisma.goal.update({
     where: { 

@@ -2,8 +2,21 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { XP_PER_HABIT, XP_PER_GOAL, XP_PER_STEP, calculateNewStats } from "@/lib/gamification";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function toggleHabit(habitId: string) {
+
+  const session = await getServerSession(authOptions);
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true, level: true, xp_points: true } // On a besoin du niveau et de l'xp
+  });
+
+  if (!user) return;
+
   // 1. Définir "Aujourd'hui" (Fenêtre de 00:00 à 23:59)
   const now = new Date()
   
@@ -25,12 +38,16 @@ export async function toggleHabit(habitId: string) {
       }
     })
 
+    let xpModifier = 0;
+
     if (existingLog) {
       await prisma.habitLog.delete({
         where: {
           id: existingLog.id
         }
       })
+
+      xpModifier = -XP_PER_HABIT;
 
     } else {
       await prisma.habitLog.create({
@@ -40,7 +57,22 @@ export async function toggleHabit(habitId: string) {
           isCompleted: true
         }
       })
+      xpModifier = XP_PER_HABIT;
     }
+
+    const { newLevel, newXp } = calculateNewStats(
+        user.level, 
+        user.xp_points, 
+        xpModifier
+    );
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        level: newLevel,
+        xp_points: newXp
+      }
+    });
 
     // 3. Rafraîchir l'interface
     revalidatePath("/habits")
