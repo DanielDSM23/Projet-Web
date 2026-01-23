@@ -21,10 +21,10 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        run: cd src && npm install
 
       - name: Run tests
-        run: npm run test
+        run: cd src && npm run test
   deploy:
     runs-on: ubuntu-latest
     steps:
