@@ -2,13 +2,26 @@ import { prisma } from "@/lib/prisma"
 import HabitCard from "@/components/HabitCard"
 import Link from "next/link"
 import { calculateStreak } from "@/lib/streak"
-
-const CURRENT_USER_ID = "ad87741c-028e-4bf6-b480-fed5d3c1933b"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/authOptions"
+import { redirect } from "next/navigation"
 
 export default async function HabitsPage() {
+
+  const session = await getServerSession(authOptions)
+
+  if (!session || !session.user?.email) {
+    redirect("/api/auth/signin")
+  }
+
+  const userData = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true }
+  })
+
   // 1. Récupération des habitudes et de leurs logs
   const habits = await prisma.habit.findMany({
-    where: { userId: CURRENT_USER_ID },
+    where: { userId: userData.id },
     include: {
       logs: true // On récupère l'historique pour savoir si c'est fait
     },
