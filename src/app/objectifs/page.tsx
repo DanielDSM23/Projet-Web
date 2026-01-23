@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { getObjectifsSSR } from "./objectif.ssr"; // ✅ AJOUT
+import { getObjectifsSSR } from "./objectif.ssr";
+import { revalidatePath } from "next/cache";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -21,6 +22,24 @@ export default async function Objectif({
     session,
     params,
   });
+
+  async function deleteObjectifAction(id: string) {
+    "use server";
+
+    const session = await getServerSession(authOptions);
+    const email = session?.user?.email;
+    if (!email) throw new Error("Unauthorized");
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user?.id) throw new Error("Unauthorized");
+
+    // Sécurité: delete seulement si l'objectif appartient à l'utilisateur
+    await prisma.goal.deleteMany({
+      where: { id, userId: user.id },
+    });
+
+    revalidatePath("/objectifs");
+  }
 
   const list = objectifs ?? [];
 
@@ -205,7 +224,9 @@ export default async function Objectif({
           <div className="border-b border-zinc-200 px-6 py-4 flex flex-row items-center justify-between">
             <div>
               <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
-              <p className="text-xs text-zinc-500">Les plus récents en premier</p>
+              <p className="text-xs text-zinc-500">
+                Les plus récents en premier
+              </p>
             </div>
             <div>
               <Link
@@ -323,6 +344,15 @@ export default async function Objectif({
                         >
                           Modifier
                         </Link>
+
+                        <form action={deleteObjectifAction}>
+                          <button
+                            type="submit"
+                            className="rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-zinc-50"
+                          >
+                            Supprimer
+                          </button>
+                        </form>
                       </div>
                     </div>
                   </li>
