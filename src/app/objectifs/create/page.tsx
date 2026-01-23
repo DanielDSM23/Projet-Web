@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { createGoalAction } from "@/actions/manage-goals";
 
 export default async function CreateObjectifPage() {
   const session = await getServerSession(authOptions);
@@ -17,46 +18,10 @@ export default async function CreateObjectifPage() {
     select: { id: true },
   });
 
-  if (!user?.id) {
-    // Cas rare: session ok mais user pas en base
-    redirect("/login");
-  }
-
-  async function createGoal(formData: FormData) {
-    "use server";
-
-    const title = String(formData.get("title") || "").trim();
-    const descriptionRaw = String(formData.get("description") || "").trim();
-    const categoryRaw = String(formData.get("category") || "").trim();
-
-    const priority = (formData.get("priority") ?? "medium") as Priority;
-    const status = (formData.get("status") ?? "active") as GoalStatus;
-
-    const startDateRaw = String(formData.get("startDate") || "").trim();
-    const deadlineRaw = String(formData.get("deadline") || "").trim();
-
-    if (!title) return;
-
-    const startDate = startDateRaw ? new Date(startDateRaw) : null;
-    const deadline = deadlineRaw ? new Date(deadlineRaw) : null;
-
-    await prisma.goal.create({
-      data: {
-        title,
-        description: descriptionRaw || null,
-        category: categoryRaw || null,
-        priority,
-        status,
-        startDate,
-        deadline,
-        completedAt: status === "completed" ? new Date() : null,
-        userId: user.id,
-      },
-    });
-
-    redirect("/objectifs");
-  }
-
+    if (!user?.id) {
+        // Cas rare: session ok mais user pas en base
+        redirect("/login");
+    }
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -92,20 +57,20 @@ export default async function CreateObjectifPage() {
             </p>
           </div>
 
-          <form action={createGoal} className="p-6">
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* Title */}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-zinc-900">
-                  Titre *
-                </label>
-                <input
-                  name="title"
-                  placeholder="Ex: Perdre 5kg"
-                  className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-200"
-                  required
-                />
-              </div>
+                    <form action={createGoalAction} className="p-6">
+                        <div className="grid gap-6 sm:grid-cols-2">
+                            {/* Title */}
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-zinc-900">
+                                    Titre *
+                                </label>
+                                <input
+                                    name="title"
+                                    placeholder="Ex: Perdre 5kg"
+                                    className="mt-2 w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400 focus:ring-2 focus:ring-zinc-200"
+                                    required
+                                />
+                            </div>
 
               {/* Description */}
               <div className="sm:col-span-2">

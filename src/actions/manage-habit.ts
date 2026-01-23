@@ -3,6 +3,24 @@
 import { Frequency } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/authOptions"
+
+
+async function getAuthenticatedUser() {
+  const session = await getServerSession(authOptions)
+
+    if (!session || !session.user?.email) {
+      redirect("/api/auth/signin")
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true }
+    })
+
+    return user;
+}
 
 function err(code: string) {
   return redirect(`/register?error=${encodeURIComponent(code)}`);
@@ -20,11 +38,14 @@ function toFrequency(value: string): Frequency {
 }
 
 export async function addHabit(formData: FormData) {
+
+  const user = await getAuthenticatedUser();
+
   const name = String(formData.get("title") ?? "")
   const description = String(formData.get("description") ?? "").trim() || null;
   const category = String(formData.get("category") ?? "");
   const frequency = String(formData.get("frequency") ?? "");
-  const userId = "ad87741c-028e-4bf6-b480-fed5d3c1933b"; // TODO: get from session
+  const userId = user.id;
 
   if (!name || !category || !frequency) err("missing_fields");
 
