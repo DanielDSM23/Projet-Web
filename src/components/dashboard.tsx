@@ -30,6 +30,10 @@ export async function Dashboard({stats} :any) {
   //   value: count,
   // }));
 
+  if (!stats) {
+    return <div>Loading...</div>;
+  }
+
   const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#6b7280'];
 
   const categoryLabels: Record<string, string> = {
@@ -41,13 +45,13 @@ export async function Dashboard({stats} :any) {
     other: 'Autre',
   };
 
-  const activeGoals = stats.goals.filter((g :any) => g.status === "active").length;
-  const completedGoalsCount = stats.goals.filter((g :any) => g.status === 'completed').length;
-  const totalGoals = stats.goals.length;
+  const activeGoals = stats?.goals?.filter((g :any) => g.status === "active").length;
+  const completedGoalsCount = stats?.goals?.filter((g :any) => g.status === 'completed').length;
+  const totalGoals = stats?.goals?.length;
   const completionRate = totalGoals > 0 ? Math.round((completedGoalsCount / totalGoals) * 100) : 0;
-  const goals = stats.goals;
+  const goals = stats?.goals;
   let completedSteps : Step[] = [];
-  for( let i =0; i<goals.length; i++){
+  for( let i =0; i<goals?.length; i++){
       const totalStepCompleted : Step[] = await prisma.step.findMany({
       where: {
         goalId: goals[i].id,
@@ -57,12 +61,12 @@ export async function Dashboard({stats} :any) {
     completedSteps.push(...totalStepCompleted);
   };
 
-  const activeHabits = stats.habits.filter((h :any) => !h.isArchived).length;
-  const totalHabitCompletions = stats.habits.filter((h :any)  => h.isArchived).length;
+  const activeHabits = stats?.habits?.filter((h :any) => !h.isArchived).length;
+  const totalHabitCompletions = stats?.habits?.filter((h :any)  => h.isArchived).length;
 
-  const habits = stats.habits;
+  const habits = stats?.habits;
   let streakList = [];
-  for(let j = 0; j<habits.length; j++){
+  for(let j = 0; j<habits?.length; j++){
     const habitsLog = await prisma.habitLog.findMany({
       where: {
         habitId: habits[j].id
@@ -76,7 +80,7 @@ export async function Dashboard({stats} :any) {
   const sortedStreak = streakList.sort(function(a, b){return b-a});
   const bestStreak = sortedStreak[0];
 
-  const pointsToNextLevel = ((stats.level) * 500) - stats.xp_points;
+  const pointsToNextLevel = ((stats?.level) * 500) - stats?.xp_points;
   // const pointsToNextLevel =  500;
 
   // const renderBadgeIcon = (iconName: string) => {
@@ -98,11 +102,11 @@ export async function Dashboard({stats} :any) {
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Niveau {stats.level}</div>
+            <div className="text-2xl font-bold">Niveau {stats?.level}</div>
             <p className="text-xs text-muted-foreground">
               {pointsToNextLevel} points pour le niveau suivant
             </p>
-            <Progress value={(stats.xp_points % 500) / 5} className="mt-2" />
+            <Progress value={(stats?.xp_points % 500) / 5} className="mt-2" />
           </CardContent>
         </Card>
 
