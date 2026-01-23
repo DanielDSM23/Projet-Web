@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { updateGoalAction } from "@/actions/manage-goals";
 
 function toInputDate(value) {
   if (!value) return "";
@@ -25,46 +26,7 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
 
   if (!objectif) notFound();
 
-  async function updateGoal(formData) {
-    "use server";
-
-    const title = String(formData.get("title") || "").trim();
-    const descriptionRaw = String(formData.get("description") || "").trim();
-    const categoryRaw = String(formData.get("category") || "").trim();
-
-    const priority = (formData.get("priority") ?? "medium") as Priority;
-    const status = (formData.get("status") ?? "active") as GoalStatus;
-
-    const startDateRaw = String(formData.get("startDate") || "").trim();
-    const deadlineRaw = String(formData.get("deadline") || "").trim();
-
-    if (!title) {
-      // minimal : on pourrait gérer un message d'erreur UI, mais on reste simple
-      return;
-    }
-
-    const startDate = startDateRaw ? new Date(startDateRaw) : null;
-    const deadline = deadlineRaw ? new Date(deadlineRaw) : null;
-
-    await prisma.goal.update({
-      where: { id: objectif.id },
-      data: {
-        title,
-        description: descriptionRaw || null,
-        category: categoryRaw || null,
-        priority,
-        status,
-        startDate,
-        deadline,
-        completedAt: status === "completed" ? new Date() : null,
-      },
-    });
-    if (status === "completed") {
-      redirect(`/objectifs?status=all&celebrate=${id}`);
-    }
-
-    redirect(`/objectifs`);
-  }
+  const updateGoalWithId = updateGoalAction.bind(null, objectif.id);
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -100,7 +62,7 @@ export default async function EditObjectifPage({ params }: { params: { id: strin
             </p>
           </div>
 
-          <form action={updateGoal} className="p-6">
+          <form action={updateGoalWithId} className="p-6">
             <div className="grid gap-6 sm:grid-cols-2">
               {/* Title */}
               <div className="sm:col-span-2">
