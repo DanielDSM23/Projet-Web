@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { getObjectifsSSR } from "./objectif.ssr";
+import { revalidatePath } from "next/cache";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -14,37 +16,37 @@ export default async function Objectif({
   const params = await searchParams;
   const session = await getServerSession(authOptions);
 
-  const UserData = await prisma.user.findUnique({
-    where: { email: session.user.email },
+  // ✅ Toute la logique SSR (user + filtres + prisma.findMany) est déplacée dans objectif.ssr.ts
+  const { objectifs, query } = await getObjectifsSSR({
+    prisma,
+    session,
+    params,
   });
 
-  // ✅ Filtres/tri via URL (ex: /objectifs?status=active&priority=high&sort=createdAt_desc)
-  const status = typeof params.status === "string" ? params.status : "all"; // all | active | completed | abandoned
-  const priority =
-    typeof params.priority === "string" ? params.priority : "all"; // all | low | medium | high
-  const sort = typeof params.sort === "string" ? params.sort : "createdAt_desc"; // createdAt_desc | createdAt_asc | title_asc
+  async function deleteObjectifAction(id: string) {
+    "use server";
 
-  // ✅ where dynamique
-  const where = {
-    userId: UserData.id,
-    ...(status !== "all" ? { status } : {}),
-    ...(priority !== "all" ? { priority } : {}),
-  };
+    const session = await getServerSession(authOptions);
+    const email = session?.user?.email;
+    if (!email) throw new Error("Unauthorized");
 
-  // ✅ orderBy dynamique
-  const orderBy =
-    sort === "createdAt_asc"
-      ? { createdAt: "asc" as const }
-      : sort === "title_asc"
-        ? { title: "asc" as const }
-        : { createdAt: "desc" as const };
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user?.id) throw new Error("Unauthorized");
 
-  const objectifs = await prisma.goal.findMany({
-    where,
-    orderBy,
-  });
+    // Sécurité: delete seulement si l'objectif appartient à l'utilisateur
+    await prisma.goal.deleteMany({
+      where: { id, userId: user.id },
+    });
+
+    revalidatePath("/objectifs");
+  }
 
   const list = objectifs ?? [];
+
+  // ✅ Pour activer les FilterPill, on récupère les valeurs calculées (ou defaults si query null)
+  const status = query?.status ?? "all";
+  const priority = query?.priority ?? "all";
+  const sort = query?.sort ?? "createdAt_desc";
 
   const statusLabel = (status: string) => {
     switch (status) {
@@ -141,7 +143,7 @@ export default async function Objectif({
           </div>
         </header>
 
-        {/* ✅ AJOUT: barre de filtres/tri (n'altère pas ton design existant) */}
+        {/* Barre de filtres/tri */}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <span className="text-xs text-zinc-500 mr-1">Filtrer :</span>
           <FilterPill
@@ -208,7 +210,6 @@ export default async function Objectif({
             active={sort === "title_asc"}
           />
 
-          {/* Reset */}
           <span className="mx-2 hidden h-6 w-px bg-zinc-200 sm:block" />
           <Link
             href="/objectifs"
@@ -223,15 +224,19 @@ export default async function Objectif({
           <div className="border-b border-zinc-200 px-6 py-4 flex flex-row items-center justify-between">
             <div>
               <h2 className="text-sm font-medium text-zinc-900">Liste</h2>
-              <p className="text-xs text-zinc-500">Les plus récents en premier</p>
+              <p className="text-xs text-zinc-500">
+                Les plus récents en premier
+              </p>
             </div>
             <div>
-              <Link href="/objectifs/create" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+              <Link
+                href="/objectifs/create"
+                className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+              >
                 + Ajouter un objectif
               </Link>
             </div>
           </div>
-
 
           <div className="p-6">
             {list.length === 0 ? (
@@ -248,7 +253,10 @@ export default async function Objectif({
                 </p>
 
                 <div className="mt-5">
-                  <Link href="/objectifs/create" className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300">
+                  <Link
+                    href="/objectifs/create"
+                    className="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+                  >
                     + Ajouter un objectif
                   </Link>
                 </div>
@@ -336,6 +344,15 @@ export default async function Objectif({
                         >
                           Modifier
                         </Link>
+
+                        <form action={deleteObjectifAction}>
+                          <button
+                            type="submit"
+                            className="rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-zinc-50"
+                          >
+                            Supprimer
+                          </button>
+                        </form>
                       </div>
                     </div>
                   </li>
@@ -373,7 +390,6 @@ function FilterPill({
   );
 }
 
-/** buildHref safe (supporte string / string[] et évite l’erreur Symbol) */
 function buildHref(
   currentParams: SearchParams,
   overrides: Record<string, string | null | undefined>,
